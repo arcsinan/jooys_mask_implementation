@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">JooysMaskImplementation</string>
+    <string name="str_mask_name_none">None</string>
+    <string name="str_mask_name_circle">Circle</string>
+    <string name="str_mask_name_line">Line</string>
+    <string name="str_mask_name_mirror">Mirror</string>
+    <string name="str_mask_name_rect">Rect</string>
+    <string name="str_mask_name_heart">Heart</string>
+    <string name="str_mask_name_star">Star</string>
+    <string name="str_mask_name_text">Text</string>
+</resources>
