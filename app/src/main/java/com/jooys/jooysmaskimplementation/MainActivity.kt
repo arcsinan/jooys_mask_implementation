@@ -44,6 +44,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.jooys.jooysmaskimplementation.mask.JMaskView
 import com.jooys.jooysmaskimplementation.mask.MaskInfo
+import com.jooys.jooysmaskimplementation.mask.MaskType
 import com.jooys.jooysmaskimplementation.mask.MaskUtils
 import com.jooys.jooysmaskimplementation.mask.MaskView
 import com.jooys.jooysmaskimplementation.mask.ZoomView
@@ -101,10 +102,15 @@ class MainActivity : ComponentActivity() {
                     timeline.clips.first()
                 timeline.selectedObject?.let { clip ->
                     clip.calculateFileRatio()
+                    MaskUtils.setMaskCenter(timeline, clip)
                     timeline.maskZoomView.setMaskTypeAndInfo(
                         maskInfo.maskType, clip.maskInfoData
                     )
+
+                    if (maskInfo.maskType == MaskType.NONE)
+                        maskEdit = false
                 }
+
             }
 
             // Required permissions to read media files
