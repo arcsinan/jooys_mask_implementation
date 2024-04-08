@@ -58,7 +58,7 @@ class JysTimeline {
     var timelineConnected: Boolean = false
     var clickOffset by mutableStateOf(PointF())
     var selectedItemCoordinate: JysTimelineItemCoordinate? by mutableStateOf(null)
-
+    var showMaskSelectionDialog by  mutableStateOf(false)
     fun seekToCurrentPositionAfterShortDelay() {
         scope.launch {
             delay(50)

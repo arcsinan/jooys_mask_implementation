@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -70,8 +71,7 @@ class MainActivity : ComponentActivity() {
                 if (null != clip) {
                     jlog("clipSize: ${clip.imageSize}")
                     timeline.addClip(clip)
-                    Toast.makeText(this, "Click Add mask button to add mask.", Toast.LENGTH_SHORT)
-                        .show()
+                    timeline.showMaskSelectionDialog = true
                 }
             }
         }
@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             var maskEdit by remember { mutableStateOf(false) }
-            var showMaskSelectionDialog by remember { mutableStateOf(false) }
+
             timeline = rememberJysTimeline(context = LocalContext.current)
 
             BackHandler(maskEdit) {
@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
             // Adds mask to first clip on the timeline for demo purposes
             fun addMask(maskInfo: MaskInfo) {
                 timeline.selectedItemCoordinate = null
-                showMaskSelectionDialog = false
+                timeline.showMaskSelectionDialog = false
                 maskEdit = true
                 if (timeline.selectedObject == null) timeline.selectedObject =
                     timeline.clips.first()
@@ -159,6 +159,8 @@ class MainActivity : ComponentActivity() {
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT
                                 )
+                                // Set the background for testing purposes
+                                // setBackgroundColor(Color.Green.copy(alpha=.3f).toArgb())
                             }
 
                             layoutParams = ViewGroup.LayoutParams(
@@ -251,7 +253,7 @@ class MainActivity : ComponentActivity() {
                                     }) {
                                         Text(text = if (timeline.isPlaying) "Pause" else "Resume")
                                     }
-                                    Button(onClick = { showMaskSelectionDialog = true }) {
+                                    Button(onClick = {  timeline.showMaskSelectionDialog = true }) {
                                         Text(text = "Add mask")
                                     }
                                 }
@@ -260,9 +262,9 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                if (showMaskSelectionDialog) {
+                if ( timeline.showMaskSelectionDialog) {
                     // Select mask dialog
-                    Dialog(onDismissRequest = { showMaskSelectionDialog = false }) {
+                    Dialog(onDismissRequest = {  timeline.showMaskSelectionDialog = false }) {
                         Card {
                             Column(Modifier.padding(15.dp)) {
                                 Text(text = "Select mask type")
