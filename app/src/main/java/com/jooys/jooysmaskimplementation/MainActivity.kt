@@ -49,6 +49,7 @@ import com.jooys.jooysmaskimplementation.mask.ZoomView
 import com.jooys.jooysmaskimplementation.mask.maskInfoList
 import com.jooys.jooysmaskimplementation.timeline.model.JysTimeline
 import com.jooys.jooysmaskimplementation.timeline.model.JysTimelineObject
+import com.jooys.jooysmaskimplementation.timeline.model.pause
 import com.jooys.jooysmaskimplementation.timeline.model.rememberJysTimeline
 import com.jooys.jooysmaskimplementation.timeline.model.resume
 import com.jooys.jooysmaskimplementation.timeline.ui.JLiveWindow
@@ -243,9 +244,12 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     Button(onClick = {
                                         maskEdit = false
-                                        timeline.resume()
+                                        if (timeline.isPlaying)
+                                            timeline.pause()
+                                        else
+                                            timeline.resume()
                                     }) {
-                                        Text(text = "Resume")
+                                        Text(text = if (timeline.isPlaying) "Pause" else "Resume")
                                     }
                                     Button(onClick = { showMaskSelectionDialog = true }) {
                                         Text(text = "Add mask")

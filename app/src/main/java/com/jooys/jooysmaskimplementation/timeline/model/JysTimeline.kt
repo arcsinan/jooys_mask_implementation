@@ -81,6 +81,7 @@ class JysTimeline {
     }
 
     fun buildNvsTimeline(containerWidth: Dp) {
+        initStreamingCallbacks()
         this.containerWidth = with(density) { containerWidth.toPx() }
         this.containerWidthInDp = containerWidth
         connectTimelineToLiveWindow(liveWindow)
@@ -145,6 +146,38 @@ class JysTimeline {
 
     }
 
+    private fun initStreamingCallbacks() {
+        // To find out start and end of the playback
+        streamingContext.setPlaybackCallback(object : NvsStreamingContext.PlaybackCallback {
+            override fun onPlaybackPreloadingCompletion(p0: NvsTimeline?) {
+
+            }
+
+            override fun onPlaybackStopped(p0: NvsTimeline?) {
+                isPlaying = false
+            }
+
+            override fun onPlaybackEOF(p0: NvsTimeline?) {
+
+                    jlog("playback ended")
+                    // Playback ended and if autoplay enabled than restart playback
+                    restartPlayback()
+
+
+            }
+        })
+
+        // To get current timeline position
+        streamingContext.setPlaybackCallback2 { _, pos ->
+            if (!isPlaying) isPlaying = true
+            currentPosition = pos
+            var playbackRestartTime = nvsTimeline.duration
+
+            if (currentPosition >= playbackRestartTime) {
+                restartPlayback()
+            }
+        }
+    }
 
 
     fun convertSceneCoordinatesToViewCoordinates(verticesList: List<PointF>): List<PointF> {
