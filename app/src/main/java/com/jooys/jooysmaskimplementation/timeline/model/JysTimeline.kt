@@ -36,11 +36,6 @@ import kotlinx.coroutines.launch
 
 class JysTimeline {
 
-    companion object {
-        const val ImageClipDuration = 3000000L
-        const val MaxVideoDuration = 600000000L
-    }
-
     lateinit var scope: CoroutineScope
     lateinit var streamingContext: NvsStreamingContext
     lateinit var context: Context
