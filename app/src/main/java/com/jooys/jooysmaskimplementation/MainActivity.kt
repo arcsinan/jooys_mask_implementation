@@ -103,8 +103,8 @@ class MainActivity : ComponentActivity() {
                     timeline.clips.first()
 
                 timeline.selectedObject?.let { clip ->
-                    clip.calculateFileRatio()
-
+                    if (clip.fileRatio == -1f)
+                        clip.calculateFileRatio()
                     MaskUtils.setMaskCenter(timeline, clip)
                     timeline.maskZoomView.setMaskTypeAndInfo(
                         maskInfo.maskType, clip.maskInfoData
@@ -181,7 +181,8 @@ class MainActivity : ComponentActivity() {
                             onDataChangeListener = object : ZoomView.OnDataChangeListener {
                                 override fun onDataChanged() {
                                     timeline.selectedObject?.let {
-                                        it.calculateFileRatio()
+                                        if (it.fileRatio == -1f)
+                                            it.calculateFileRatio()
                                         MaskUtils.setMaskCenter(timeline, it)
                                         MaskUtils.applyMask(timeline, it, maskInfoData)
                                         timeline.selectedObject!!.maskInfoData = maskInfoData
@@ -212,23 +213,20 @@ class MainActivity : ComponentActivity() {
 
 
                     BackHandler(maskEdit) {
-                        if (maskEdit)  {
+                        if (maskEdit) {
                             maskEdit = false
                         }
                     }
 
                     // LIVE WINDOW
                     JLiveWindow(timeline = timeline, containerWidth = containerWidth)
-                        // Display ZoomView view
-                        AndroidView(
-                            factory = { zoomView },
-                            update = {
-                                if (!maskEdit) {
-                                    it.clear()
-                                    it.maskView.clearData()
-                                }
-                            }
-                        )
+                    // Display ZoomView view
+                    AndroidView(
+                        factory = { zoomView },
+                        update = {
+
+                        }
+                    )
 
 
                     // UI

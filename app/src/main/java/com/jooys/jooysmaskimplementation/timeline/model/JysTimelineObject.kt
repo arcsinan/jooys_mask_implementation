@@ -22,7 +22,7 @@ class JysTimelineObject {
     lateinit var source: Uri
     lateinit var nvsClip: NvsClip
     var backGroundInfo: BackGroundInfo? = null
-    var fileRatio: Float = 1f
+    var fileRatio: Float = -1f
     var maskInfoData: MaskInfoData? = null
     var cropInfo: CutData? = null
     @Transient
