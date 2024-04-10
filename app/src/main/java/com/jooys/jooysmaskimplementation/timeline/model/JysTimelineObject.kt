@@ -26,13 +26,14 @@ class JysTimelineObject {
     var maskInfoData: MaskInfoData? = null
     var cropInfo: CutData? = null
     @Transient
-    var currentTransformation: JysTransformInfo = JysTransformInfo.Default
-    var transformation: JysTransformInfo = JysTransformInfo.Default
-    var viewCoordinates: JysTimelineItemCoordinate = JysTimelineItemCoordinate.Zero
+    var currentTransformation: JysTransformation = JysTransformation.Default
+    var transformation: JysTransformation = JysTransformation.Default
+    var viewCoordinates: JysCoordinate = JysCoordinate.Zero
     var imageSize: IntSize = IntSize.Zero
     var duration: Long = 0L
     val isNvsClipInitialized: Boolean get() = this::nvsClip.isInitialized
     lateinit var timeline: JysTimeline
+
     fun calculateFileRatio() {
         val avInfoFromFile = NvsStreamingContext.getAVInfoFromFile(source.toString(), 0)
         if (avInfoFromFile != null) {
@@ -58,14 +59,14 @@ class JysTimelineObject {
         rotationChange: Float,
         jysTimeline: JysTimeline,
         timelinePosition: Long = jysTimeline.currentPosition,
-    ): JysTransformInfo {
+    ): JysTransformation {
         if (!isNvsClipInitialized || nvsClip !is NvsVideoClip) {
             jlog("Trying to apply transform before setting NvsClip!!!")
-            return JysTransformInfo.Default
+            return JysTransformation.Default
         }
         val nvsVideoClip = nvsClip as NvsVideoClip
         if (nvsVideoClip.propertyVideoFx == null)
-            return JysTransformInfo.Default
+            return JysTransformation.Default
 
         val transX = nvsVideoClip.propertyVideoFx.getFloatValAtTime(
             NvsConstants.FX_TRANSFORM_2D_TRANS_X,
@@ -94,16 +95,48 @@ class JysTimelineObject {
         applyTransformFx(transX, transY, rotation, scaleX, scaleY, jysTimeline)
         val viewCoordinate =
             timeline.liveWindow.mapCanonicalToView(PointF(transX.toFloat(), transY.toFloat()))
-        transformation = JysTransformInfo(
+        transformation = JysTransformation(
             transX,
             transY,
             rotation,
             scaleX,
-            scaleY,
-            Offset(viewCoordinate.x, viewCoordinate.y)
+            scaleY
         )
         return currentTransformation
 
+    }
+
+
+    fun getTransformationAtTime(time: Long): JysTransformation? {
+        if (nvsClip !is NvsVideoClip) return null
+        val propertyVideoFx = (nvsClip as NvsVideoClip).propertyVideoFx
+        propertyVideoFx.let {
+            val transformX = propertyVideoFx.getFloatValAtTime(NvsConstants.PROPERTY_KEY_TRANS_X, time)
+            val transformY = propertyVideoFx.getFloatValAtTime(NvsConstants.PROPERTY_KEY_TRANS_Y, time)
+            val scaleX = propertyVideoFx.getFloatValAtTime(NvsConstants.PROPERTY_KEY_SCALE_X, time)
+            val scaleY = propertyVideoFx.getFloatValAtTime(NvsConstants.PROPERTY_KEY_SCALE_Y, time)
+            val rotation = propertyVideoFx.getFloatValAtTime(NvsConstants.PROPERTY_KEY_ROTATION, time)
+            return JysTransformation(
+                x = transformX,
+                y = transformY,
+                scaleX = scaleX,
+                scaleY = scaleY,
+                rotation = rotation,
+            )
+        }
+    }
+
+    fun getViewCoordinatesAtTime(time: Long): JysCoordinate? {
+        val transformationAtTime = getTransformationAtTime(time) ?: return null
+        val sceneVertices = timeline.convertSceneCoordinatesToViewCoordinates(
+            calculateSceneCoordinates(
+                PointF(transformationAtTime.x.toFloat(), transformationAtTime.y.toFloat()),
+                transformationAtTime.scaleX.toFloat(),
+                transformationAtTime.rotation.toFloat(),
+                timeline
+            )
+        )
+        return timeline.getViewCoordinatesFromSceneVertices(sceneVertices)
     }
 
     fun JysTimelineObject.getLocationOnScreen(): PointF {

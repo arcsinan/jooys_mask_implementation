@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -39,14 +41,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.jooys.jooysmaskimplementation.mask.JMaskView
 import com.jooys.jooysmaskimplementation.mask.MaskInfo
 import com.jooys.jooysmaskimplementation.mask.MaskType
 import com.jooys.jooysmaskimplementation.mask.MaskUtils
 import com.jooys.jooysmaskimplementation.mask.MaskView
+import com.jooys.jooysmaskimplementation.mask.NvMaskHelper
 import com.jooys.jooysmaskimplementation.mask.ZoomView
 import com.jooys.jooysmaskimplementation.mask.maskInfoList
 import com.jooys.jooysmaskimplementation.timeline.model.JysTimeline
@@ -57,6 +60,7 @@ import com.jooys.jooysmaskimplementation.timeline.model.resume
 import com.jooys.jooysmaskimplementation.timeline.ui.JLiveWindow
 import com.jooys.jooysmaskimplementation.ui.theme.JooysMaskImplementationTheme
 import com.jooys.jooysmaskimplementation.utils.jlog
+import com.jooys.jooysmaskimplementation.utils.toDp
 import com.jooys.jooysmaskimplementation.utils.toPx
 
 class MainActivity : ComponentActivity() {
@@ -85,9 +89,6 @@ class MainActivity : ComponentActivity() {
 
             timeline = rememberJysTimeline(context = LocalContext.current)
 
-            BackHandler(maskEdit) {
-                if (maskEdit) maskEdit = false
-            }
 
             fun selectMedia() {
                 pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
@@ -100,13 +101,14 @@ class MainActivity : ComponentActivity() {
                 maskEdit = true
                 if (timeline.selectedObject == null) timeline.selectedObject =
                     timeline.clips.first()
+
                 timeline.selectedObject?.let { clip ->
                     clip.calculateFileRatio()
+
                     MaskUtils.setMaskCenter(timeline, clip)
                     timeline.maskZoomView.setMaskTypeAndInfo(
                         maskInfo.maskType, clip.maskInfoData
                     )
-
                     if (maskInfo.maskType == MaskType.NONE)
                         maskEdit = false
                 }
@@ -134,39 +136,38 @@ class MainActivity : ComponentActivity() {
             }
 
 
+
             JooysMaskImplementationTheme {
                 // A surface container using the 'background' color from the theme
                 BoxWithConstraints(
                     Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
+                        .aspectRatio(9f / 16f)
                         .background(Color.Green)
                 ) {
                     // Dimensions of parent box
                     val containerWidth = maxWidth
                     val containerHeight = maxHeight
-
-
-                    // LIVE WINDOW
-                    JLiveWindow(timeline = timeline, containerWidth = containerWidth)
-
+                    val containerHeightInPx = containerHeight.toPx().toInt()
                     // We create ZoomView here
-                    val zoomView: ZoomView = remember(containerHeight) {
+                    val zoomView: ZoomView = remember {
                         // We create ZoomView and MaskView here.
                         //
                         ZoomView(
                             context = timeline.context
                         ).apply {
+
                             timeline.maskZoomView = this
 
                             val maskView = MaskView(
                                 context = timeline.context
                             ).apply {
-                                layoutParams = ViewGroup.LayoutParams(
-                                    ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.MATCH_PARENT
-                                )
+//                                layoutParams = ViewGroup.LayoutParams(
+//                                    ViewGroup.LayoutParams.MATCH_PARENT,
+//                                    ViewGroup.LayoutParams.MATCH_PARENT
+//                                )
+                                screenHeight = containerHeightInPx
                                 // Set the background for testing purposes
-                                // setBackgroundColor(Color.Green.copy(alpha=.3f).toArgb())
                             }
 
                             layoutParams = ViewGroup.LayoutParams(
@@ -175,9 +176,12 @@ class MainActivity : ComponentActivity() {
                             )
                             gravity = Gravity.CENTER
                             visibility = View.GONE
+
+
                             onDataChangeListener = object : ZoomView.OnDataChangeListener {
                                 override fun onDataChanged() {
                                     timeline.selectedObject?.let {
+                                        it.calculateFileRatio()
                                         MaskUtils.setMaskCenter(timeline, it)
                                         MaskUtils.applyMask(timeline, it, maskInfoData)
                                         timeline.selectedObject!!.maskInfoData = maskInfoData
@@ -195,29 +199,46 @@ class MainActivity : ComponentActivity() {
                             // Attach mask view
                             setMaskView(maskView)
 
-                            // Set fragment height as it is set Meicam Senior demo.
-                            setVideoFragmentHeight(
-                                with(timeline.density) { containerHeight.toPx().toInt() },
-                                timeline.liveWindow.width,
-                                timeline.liveWindow.height
-                            )
+                            post {
+                                // Set fragment height as it is set Meicam Senior demo.
+                                setVideoFragmentHeight(
+                                    containerHeightInPx,
+                                    timeline.liveWindow.width,
+                                    timeline.liveWindow.height
+                                )
+                            }
                         }
                     }
 
-                    if (maskEdit) {
-                        // Display ZoomView view
-                        JMaskView(
-                            zoomView = zoomView,
-                            containerHeight = containerHeight.toPx().toInt()
-                        )
+
+                    BackHandler(maskEdit) {
+                        if (maskEdit)  {
+                            maskEdit = false
+                        }
                     }
+
+                    // LIVE WINDOW
+                    JLiveWindow(timeline = timeline, containerWidth = containerWidth)
+                        // Display ZoomView view
+                        AndroidView(
+                            factory = { zoomView },
+                            update = {
+                                if (!maskEdit) {
+                                    it.clear()
+                                    it.maskView.clearData()
+                                }
+                            }
+                        )
+
 
                     // UI
                     Box(Modifier.fillMaxSize()) {
                         if (timeline.clips.isEmpty()) {
                             // Select media button
                             Column(
-                                Modifier.fillMaxSize().padding(30.dp),
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(30.dp),
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
@@ -259,7 +280,7 @@ class MainActivity : ComponentActivity() {
                                     }) {
                                         Text(text = if (timeline.isPlaying) "Pause" else "Resume")
                                     }
-                                    Button(onClick = {  timeline.showMaskSelectionDialog = true }) {
+                                    Button(onClick = { timeline.showMaskSelectionDialog = true }) {
                                         Text(text = "Add mask")
                                     }
                                 }
@@ -268,9 +289,9 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                if ( timeline.showMaskSelectionDialog) {
+                if (timeline.showMaskSelectionDialog) {
                     // Select mask dialog
-                    Dialog(onDismissRequest = {  timeline.showMaskSelectionDialog = false }) {
+                    Dialog(onDismissRequest = { timeline.showMaskSelectionDialog = false }) {
                         Card {
                             Column(Modifier.padding(15.dp)) {
                                 Text(text = "Select mask type")

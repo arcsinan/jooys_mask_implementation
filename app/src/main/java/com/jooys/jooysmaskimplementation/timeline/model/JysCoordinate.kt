@@ -3,7 +3,7 @@ package com.jooys.jooysmaskimplementation.timeline.model
 import android.graphics.PointF
 import androidx.compose.ui.geometry.Size
 
-data class JysTimelineItemCoordinate(
+data class JysCoordinate(
     var topLeft: PointF,
     var bottomLeft: PointF,
     var topRight: PointF,
@@ -20,8 +20,8 @@ data class JysTimelineItemCoordinate(
         get() = Size(width, height)
 
     companion object {
-        val Zero: JysTimelineItemCoordinate
-            get() = JysTimelineItemCoordinate(
+        val Zero: JysCoordinate
+            get() = JysCoordinate(
                 PointF(0f, 0f),
                 PointF(0f, 0f),
                 PointF(0f, 0f),

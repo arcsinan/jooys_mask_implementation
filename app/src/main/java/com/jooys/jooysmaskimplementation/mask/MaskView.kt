@@ -16,6 +16,8 @@ import com.jooys.jooysmaskimplementation.R
 import com.jooys.jooysmaskimplementation.utils.getScreenHeight
 import com.jooys.jooysmaskimplementation.utils.getScreenWidth
 import com.jooys.jooysmaskimplementation.utils.jlog
+import com.jooys.jooysmaskimplementation.utils.navigationBarHeight
+import com.jooys.jooysmaskimplementation.utils.statusBarHeight
 
 
 class MaskView @JvmOverloads constructor(
@@ -25,8 +27,8 @@ class MaskView @JvmOverloads constructor(
     View(context, attrs) {
 
 
-    private val screenWidth: Int get() = context.getScreenWidth()
-    private val screenHeight: Int get() = context.getScreenHeight()
+    val screenWidth: Int get() = context.getScreenWidth()
+    var screenHeight: Int = 0
 
     /**
      * The width and height of the view are overridden so that the maximum value of the view is outside the fragment range
@@ -210,6 +212,8 @@ class MaskView @JvmOverloads constructor(
                 MaskType.STAR -> {
                     it.maskWidth = ((currentMaskWidth * scaleValue).toInt())
                     it.maskHeight = ((currentMaskHeight * scaleValue).toInt())
+
+                    jlog("maskWidth: ${it.maskWidth}, maskHeight: ${it.maskHeight}")
                 }
 
                 MaskType.MIRROR -> {

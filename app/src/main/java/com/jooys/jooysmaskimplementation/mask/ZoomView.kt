@@ -4,13 +4,15 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Path
+import android.graphics.Point
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.Region
+import android.os.Build
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.WindowManager
 import android.widget.RelativeLayout
-import androidx.compose.ui.unit.Density
 import com.jooys.jooysmaskimplementation.utils.getScreenWidth
 import com.jooys.jooysmaskimplementation.utils.jlog
 import kotlin.math.abs
@@ -76,7 +78,7 @@ class ZoomView @JvmOverloads constructor(
      * 0= Unselected, 1= Drag, 2= Scale
      */
     private var moveType = 0
-    private lateinit var maskView: MaskView
+    lateinit var maskView: MaskView
     private var videoFragmentHeight = 0
 
     /**
@@ -152,13 +154,17 @@ class ZoomView @JvmOverloads constructor(
         (it * scale + 0.5f).toInt()
     }
 
-    val screenWidth : Int get() = context.getScreenWidth()
+
+     val screenWidth : Int get() = context.getScreenWidth()
+
+    //var screenWidth: Int = 0
 
     /**
      * Sets mask view.
      *
      * @param maskView the mask view
      */
+    @JvmName("_setMaskView")
     fun setMaskView(maskView: MaskView) {
         this.maskView = maskView
         mFeatherIconDis = dp2px(10f)
@@ -202,7 +208,7 @@ class ZoomView @JvmOverloads constructor(
         return false
     }
 
-    @SuppressLint("ClickableViewAccessibility")
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val maskInfoData: MaskInfoData? = maskView.maskDataInfo
         if (maskInfoData == null) {
@@ -210,7 +216,6 @@ class ZoomView @JvmOverloads constructor(
             return true
         }
         val i = event.action and MotionEvent.ACTION_MASK
-
 
         // The center position of the mask view needs to be recalculated according to the translate value
         if (i == MotionEvent.ACTION_DOWN) {
@@ -220,8 +225,10 @@ class ZoomView @JvmOverloads constructor(
             )
             centerDownCenter.x += translationX
             centerDownCenter.y += translationY
-            jlog(("Mask action down -> centerDown x:" + centerDownCenter.x + " y:" + centerDownCenter.y
-                        + " ||maskCenter x:" + maskView.centerPoint.x) + " y:" + maskView.centerPoint.y)
+            jlog(
+                ("Mask action down -> centerDown x:" + centerDownCenter.x + " y:" + centerDownCenter.y
+                        + " ||maskCenter x:" + maskView.centerPoint.x) + " y:" + maskView.centerPoint.y
+            )
             mType = maskInfoData.maskType
             // Trigger Feather Value Adjustment
             val endRotation: Float = rotation - maskView.rotation
@@ -269,7 +276,7 @@ class ZoomView @JvmOverloads constructor(
                 doMaskWidth = false
                 doMaskHeight = false
                 doMaskRoundCorner = false
-                jlog( "doFeather")
+                jlog("doFeather")
                 touchClick = true
                 touchClickDownTime = System.currentTimeMillis()
             } else if (isTouchPointInPath(actionX.toInt(), actionY.toInt(), mFeatherPath)) {
@@ -278,7 +285,7 @@ class ZoomView @JvmOverloads constructor(
                 doMaskWidth = false
                 doMaskHeight = false
                 doMaskRoundCorner = false
-                jlog( "doScroll")
+                jlog("doScroll")
             } else if ((mType == MaskType.RECT || mType == MaskType.CIRCLE) && isTouchPointInPath(
                     actionX.toInt(),
                     actionY.toInt(),
@@ -291,7 +298,7 @@ class ZoomView @JvmOverloads constructor(
                 doFeather = false
                 doMaskHeight = false
                 doMaskRoundCorner = false
-                jlog( "doMaskWidth")
+                jlog("doMaskWidth")
             } else if ((mType == MaskType.RECT || mType == MaskType.CIRCLE) && isTouchPointInPath(
                     actionX.toInt(),
                     actionY.toInt(),
@@ -304,7 +311,7 @@ class ZoomView @JvmOverloads constructor(
                 doScroll = false
                 doFeather = false
                 doMaskRoundCorner = false
-                jlog( "doMaskHeight")
+                jlog("doMaskHeight")
             } else if (mType == MaskType.RECT && isTouchPointInPath(
                     actionX.toInt(),
                     actionY.toInt(),
@@ -316,7 +323,7 @@ class ZoomView @JvmOverloads constructor(
                 doMaskWidth = false
                 doMaskHeight = false
                 doFeather = false
-                jlog( "doMaskRoundCorner")
+                jlog("doMaskRoundCorner")
             }
         } else if (i == MotionEvent.ACTION_POINTER_DOWN) {
             jlog("ACTION_POINTER_2_DOWN point count = " + event.pointerCount)
@@ -350,7 +357,7 @@ class ZoomView @JvmOverloads constructor(
                     maskView.setFeatherWidth(featherWidth, mFeatherIconDis)
                     actionX = event.x
                     actionY = event.y
-                    jlog( "featherWidth = $featherWidth")
+                    jlog("featherWidth = $featherWidth")
                     if (onDataChangeListener != null) {
                         onDataChangeListener!!.onDataChanged()
                     }
@@ -381,7 +388,7 @@ class ZoomView @JvmOverloads constructor(
                         translationY = -maxTranslationY
                     }
                     maskView.setTranslation(translationX, translationY)
-                   jlog(
+                    jlog(
 
                         "ACTION_MOVE translationX = $translationX translationY= $translationY"
                     )
@@ -418,7 +425,7 @@ class ZoomView @JvmOverloads constructor(
                         curHeight = screenWidth - mHeightIconDis * 4
                     }
                     maskView.setMaskHeight(curHeight)
-                    jlog( "doMaskHeight = $curHeight")
+                    jlog("doMaskHeight = $curHeight")
                     if (onDataChangeListener != null) {
                         onDataChangeListener!!.onDataChanged()
                     }

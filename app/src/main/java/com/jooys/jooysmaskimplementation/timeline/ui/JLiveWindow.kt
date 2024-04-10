@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.jooys.jooysmaskimplementation.timeline.model.JysTimeline
+import com.meicam.sdk.NvsLiveWindow
 import com.meicam.sdk.NvsLiveWindowExt
 
 @Composable
@@ -19,7 +20,9 @@ fun JLiveWindow(timeline: JysTimeline, containerWidth: Dp) {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
             )
+
         }.apply {
+            fillMode = NvsLiveWindow.FILLMODE_PRESERVEASPECTFIT
             timeline.liveWindow = this
         }
     }
@@ -30,7 +33,7 @@ fun JLiveWindow(timeline: JysTimeline, containerWidth: Dp) {
 
     JysEditorTransformationCanvas(timeline)
 
-    // Connect to livewindow
+    // Connect to live window
     LaunchedEffect(Unit) {
         timeline.createEmptyTimeline()
         timeline.buildNvsTimeline(containerWidth)

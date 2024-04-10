@@ -1237,8 +1237,8 @@ object NvMaskHelper {
         maskData: MaskInfoData?, liveWindowExt: NvsLiveWindowExt?,
         rotationFx: Float, fxTransformX: Float,
         fxTransformY: Float, fxScale: Float, assetAspectRatio: Float
-    ) {
-        if (maskData == null || liveWindowExt == null || fxScale == 0f) return
+    ) : MaskInfoData? {
+        if (maskData == null || liveWindowExt == null || fxScale == 0f) return null
         val size = assetSizeInBox(liveWindowExt, assetAspectRatio)
         var nvsMaskRegionInfo: NvsMaskRegionInfo? = null
         val liveWindowCenter: PointF = maskData.liveWindowCenter
@@ -1313,6 +1313,7 @@ object NvMaskHelper {
             maskData.textStoryboard = (storyBoard)
         }
         maskData.maskRegionInfo = (nvsMaskRegionInfo)
+        return maskData
     }
 
     /**
@@ -1468,7 +1469,7 @@ object NvMaskHelper {
      * @param info       info
      * @return boolean
      */
-    private fun calculateScaleInBox(liveWindow: NvsLiveWindowExt, info: JysTimelineObject?): Float {
+    fun calculateScaleInBox(liveWindow: NvsLiveWindowExt, info: JysTimelineObject?): Float {
         if (null == info) {
             return (-1).toFloat()
         }

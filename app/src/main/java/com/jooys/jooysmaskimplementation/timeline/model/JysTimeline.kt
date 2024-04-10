@@ -15,12 +15,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.jooys.jooysmaskimplementation.mask.NvMaskHelper
 import com.jooys.jooysmaskimplementation.mask.ZoomView
 import com.jooys.jooysmaskimplementation.utils.JooysDefaultResolution
 import com.jooys.jooysmaskimplementation.utils.jlog
 import com.meicam.sdk.NvsAnimatedSticker
 import com.meicam.sdk.NvsAudioResolution
-import com.meicam.sdk.NvsAudioTrack
 import com.meicam.sdk.NvsLiveWindowExt
 import com.meicam.sdk.NvsObject
 import com.meicam.sdk.NvsRational
@@ -52,8 +52,8 @@ class JysTimeline {
     var containerWidthInDp: Dp = 0.dp
     var timelineConnected: Boolean = false
     var clickOffset by mutableStateOf(PointF())
-    var selectedItemCoordinate: JysTimelineItemCoordinate? by mutableStateOf(null)
-    var showMaskSelectionDialog by  mutableStateOf(false)
+    var selectedItemCoordinate: JysCoordinate? by mutableStateOf(null)
+    var showMaskSelectionDialog by mutableStateOf(false)
     fun seekToCurrentPositionAfterShortDelay() {
         scope.launch {
             delay(50)
@@ -154,9 +154,9 @@ class JysTimeline {
 
             override fun onPlaybackEOF(p0: NvsTimeline?) {
 
-                    jlog("playback ended")
-                    // Playback ended and if autoplay enabled than restart playback
-                    restartPlayback()
+                jlog("playback ended")
+                // Playback ended and if autoplay enabled than restart playback
+                restartPlayback()
 
 
             }
@@ -185,12 +185,12 @@ class JysTimeline {
     }
 
 
-    fun getViewCoordinatesFromSceneVertices(bounds: List<PointF>): JysTimelineItemCoordinate {
+    fun getViewCoordinatesFromSceneVertices(bounds: List<PointF>): JysCoordinate {
         val bottomLeft = PointF(bounds[0].x, bounds[0].y)
         val bottomRight = PointF(bounds[1].x, bounds[1].y)
         val topRight = PointF(bounds[2].x, bounds[2].y)
         val topLeft = PointF(bounds[3].x, bounds[3].y)
-        return JysTimelineItemCoordinate(topLeft, bottomLeft, topRight, bottomRight)
+        return JysCoordinate(topLeft, bottomLeft, topRight, bottomRight)
     }
 
     fun applyTransformToSelectedObject(
@@ -217,6 +217,12 @@ class JysTimeline {
                 this.selectedItemCoordinate = it.viewCoordinates
                 this.refreshTimeline()
                 clickOffset = PointF(newPoint.x, newPoint.y)
+
+                // Set mask size
+                val scale = NvMaskHelper.calculateScaleInBox(liveWindow, it)
+                if (scale <= 0) {
+                    return
+                }
             }
         }
     }
